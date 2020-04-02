@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -g -W -Wall 
+CFLAGS= -g3 -W -Wall 
 LDFLAGS= -lm
 EXEC= Flow
 SRC= $(wildcard src/*.c)
@@ -8,7 +8,7 @@ OBJ= $(SRC:.c=.o)
 all: $(EXEC)
 
 Flow: $(OBJ)
-	@$(CC) -o bin/$@ $^ $(LDFLAGS)
+	@$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
 	@$(CC) -o $@ -c $< $(CFLAGS)
