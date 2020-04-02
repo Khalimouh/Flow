@@ -4,8 +4,8 @@
 #include <string.h>
 
 typedef struct {
-	char L[3][17];
-	char F[8];
+	char L[3][17];  //Registres
+	char F[8];	    //Fonction
 }LFSR;
 
 void DebugLFSR(LFSR* Geffe){
@@ -22,12 +22,23 @@ int FonctionF(char x0, char x1, char x2){
 }
 
 
+void Decalage(LFSR* Geffe, char* bitL0, char* bitL1, char* bitL2){
+	//Sortie du bit de poids faible
+	*bitL0 = Geffe->L[0][0]; 
+	*bitL1 = Geffe->L[1][0];
+	*bitL2 = Geffe->L[2][0];
+	//Décalage
+
+
+}
+
+
 void initialiserLFSR(const char* path,LFSR* gen){
 	FILE* file = fopen(path,"r");
 	assert(file);
 	char* buffer;
 	ssize_t read;
-	size_t len = 0;
+	size_t len = 1;
 	int i = 0;
    	printf("Initialisation du LFSR\n");
     while ((read = getline(&buffer, &len, file)) != -1) {
@@ -55,6 +66,10 @@ int main(int argc, char const *argv[])
 	initialiserLFSR(argv[1],Geffe);
 	//DebugLFSR(Geffe);
 	//printf("%d\n", FonctionF(1, 1, 1));
+  	
+	char* 
+
+
   	free(Geffe);
 	return 0;
 }
