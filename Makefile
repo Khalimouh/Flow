@@ -1,6 +1,6 @@
 CC=gcc
-CFLAGS= -g
-LDFLAGS=
+CFLAGS= -g -W -Wall 
+LDFLAGS= -lm
 EXEC= Flow
 SRC= $(wildcard src/*.c)
 OBJ= $(SRC:.c=.o)

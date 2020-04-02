@@ -17,6 +17,11 @@ void DebugLFSR(LFSR* Geffe){
   	printf("%s\n", Geffe->F);
 }
 
+int FonctionF(char x0, char x1, char x2){
+	return (x0*1) + (x1*2) + (x2*4);
+}
+
+
 void initialiserLFSR(const char* path,LFSR* gen){
 	FILE* file = fopen(path,"r");
 	assert(file);
@@ -24,6 +29,7 @@ void initialiserLFSR(const char* path,LFSR* gen){
 	ssize_t read;
 	size_t len = 0;
 	int i = 0;
+   	printf("Initialisation du LFSR\n");
     while ((read = getline(&buffer, &len, file)) != -1) {
        read = getline(&buffer, &len, file);
        //printf("%s", buffer);
@@ -48,6 +54,7 @@ int main(int argc, char const *argv[])
 	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
 	initialiserLFSR(argv[1],Geffe);
 	//DebugLFSR(Geffe);
+	//printf("%d\n", FonctionF(1, 1, 1));
   	free(Geffe);
 	return 0;
 }
