@@ -44,8 +44,28 @@ LFSR* initialiserLFSR(const char* path,LFSR* gen, Filtre* fitlre){
 
 int main(int argc, char const *argv[])
 {
-	if(argc != 2){ fprintf(stderr, "Usage: Usage  : ./Flow fichier n\n"); exit(0);}
+	//if(argc != 2){ fprintf(stderr, "Usage: Usage  : ./Flow fichier n\n"); exit(0);}
 	//Ouvir le fichier et initialiser le LFSR
+	FILE * fp;
+    char * line = NULL;
+    size_t len = 0;
+    ssize_t read;
 
+    fp = fopen("./config.txt", "r");
+    if (fp == NULL){
+    	fprintf(stderr, "Fichier introuvable \n");
+        exit(0);
+    }
+
+    while ((read = getline(&line, &len, fp)) != -1) {
+    	read = getline(&line, &len, fp);
+        printf("%s", line);
+    }
+    printf("\n");
+
+    fclose(fp);
+    if (line)
+        free(line);
+    exit(EXIT_SUCCESS);
 	return 0;
 }
