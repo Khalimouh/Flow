@@ -13,7 +13,11 @@ Flow: $(OBJ)
 %.o: %.c
 	@$(CC) -o $@ -c $< $(CFLAGS)
 
-.PHONY: clean mrproper
+.PHONY: clean mrproper 
+
+run:
+	@cd bin/
+	@./Flow ../test 8
 
 clean:
 	@rm -rf obj/*.o

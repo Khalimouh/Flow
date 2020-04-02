@@ -4,9 +4,18 @@
 #include <string.h>
 
 typedef struct {
-	char L[3][16];
+	char L[3][17];
 	char F[8];
 }LFSR;
+
+void DebugLFSR(LFSR* Geffe){
+	for (int i = 0; i < 3; ++i)
+	{
+		printf("%s\n", Geffe->L[i]);
+	}
+  	
+  	printf("%s\n", Geffe->F);
+}
 
 void initialiserLFSR(const char* path,LFSR* gen){
 	FILE* file = fopen(path,"r");
@@ -16,16 +25,15 @@ void initialiserLFSR(const char* path,LFSR* gen){
 	size_t len = 0;
 	int i = 0;
     while ((read = getline(&buffer, &len, file)) != -1) {
-    	read = getline(&buffer, &len, file);
-       // printf("%s", buffer);
-       	strcpy(gen->L[i],buffer);
-       	//gerer derniere ligne
-       //		if(i > 3) strncpy(gen->F,buffer,8);
-       	i++;
+       read = getline(&buffer, &len, file);
+       //printf("%s", buffer);
+       strcpy(gen->L[i],buffer);
+       //gerer derniere ligne
+       if(i == 3) strncpy(gen->F,buffer,8);
+       i++;
     }
-    printf("\n");
 
-	
+	free(buffer);
 	fclose(file);
 }
 
@@ -39,11 +47,7 @@ int main(int argc, char const *argv[])
 	//Ouvir le fichier et initialiser le LFSR
 	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
 	initialiserLFSR(argv[1],Geffe);
-	for (int i = 0; i < 3; ++i)
-	{
-		printf("%s\n", Geffe->L[i]);
-	}
-  	
-  	printf("%s\n", Geffe->F);
+	//DebugLFSR(Geffe);
+  	free(Geffe);
 	return 0;
 }
