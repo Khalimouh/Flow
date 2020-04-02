@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= 
+CFLAGS= -g
 LDFLAGS=
 EXEC= Flow
 SRC= $(wildcard src/*.c)
