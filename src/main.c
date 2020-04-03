@@ -37,10 +37,10 @@ int filteringF(char x0, char x1, char x2){
 }
 
 int shift ( LFSR * Geffe)	{
-	int indice = filteringF ( (Geffe->L[0][0] - '0'), (Geffe->L[1][0] - '0'), (Geffe->L[2][0] - '0'));
-	short tmp0 = (Geffe->L[0][0] - '0') ^ (Geffe->L[0][1] - '0') ^ (Geffe->L[0][4] - '0') ^ (Geffe->L[0][7] - '0'),
-		  tmp1 = (Geffe->L[1][0] - '0') ^ (Geffe->L[1][1] - '0') ^ (Geffe->L[1][7] - '0') ^ (Geffe->L[1][11] - '0'),
-		  tmp2 = (Geffe->L[2][0] - '0') ^ (Geffe->L[2][2] - '0') ^ (Geffe->L[2][3] - '0') ^ (Geffe->L[2][5] - '0');
+	int indice = filteringF ( (Geffe->L[0][15] - '0'), (Geffe->L[1][15] - '0'), (Geffe->L[2][15] - '0'));
+	short tmp0 = (Geffe->L[0][15] - '0') ^ (Geffe->L[0][14] - '0') ^ (Geffe->L[0][11] - '0') ^ (Geffe->L[0][8] - '0'),
+		  tmp1 = (Geffe->L[1][15] - '0') ^ (Geffe->L[1][14] - '0') ^ (Geffe->L[1][8] - '0') ^ (Geffe->L[1][4] - '0'),
+		  tmp2 = (Geffe->L[2][15] - '0') ^ (Geffe->L[2][13] - '0') ^ (Geffe->L[2][12] - '0') ^ (Geffe->L[2][10] - '0');
 	for (int i = 15; i > 0; i--)	{
 		Geffe->L[0][i] = Geffe->L[0][i-1];
 		Geffe->L[1][i] = Geffe->L[1][i-1];
@@ -63,7 +63,7 @@ int * generate(LFSR* Geffe, int n) { //char* bitL0, char* bitL1, char* bitL2){
 	for (int i = 0; i < n; i++)	{
 		s[i] = shift ( Geffe);
 	}
-	timer ();
+//	timer ();
 	return s;
 }
 
@@ -93,7 +93,7 @@ void initialiserLFSR(const char* path,LFSR* gen){
 	   }
        i++;
     }
-    timer ();
+//    timer ();
 	free(buffer);
 	fclose(file);
 	
