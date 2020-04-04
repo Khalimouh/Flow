@@ -2,11 +2,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 
 typedef struct {
 	char L[3][17];  //Registres
 	char F[9];	    //Fonction
 }LFSR;
+
+int * L0;
+int * L1;
+int * L2;
 
 void checkArgs ( int argc)	{
 	if(argc != 3)	{ 
@@ -14,7 +19,7 @@ void checkArgs ( int argc)	{
 		exit(1);
 	}	
 }
-
+/*
 void timer (void)	{
 	for (int i = 0; i < 3; i++)	{
 		fflush (stdout);
@@ -24,20 +29,29 @@ void timer (void)	{
 	}
     printf ("\n");
 }
-
-void printSequence ( int * s, int n)	{
-	printf ("Affichage des n premiers bit de la sequence chiffrante :\n\t");
+*/
+void printSequence ( char * t, int * s, int n)	{
+	//printf ("Affichage des n premiers bit de la sequence chiffrante :\n\n");
+	printf("\n%s = ",t);
 	for (int i = 0; i < n; i++)
 		printf ("%d ", s[i]);
-	printf ("\n");	
+	//printf ("");	
 }
 
 int filteringF(char x0, char x1, char x2){
 	return (x0*1) + (x1*2) + (x2*4);
 }
 
-int shift ( LFSR * Geffe)	{
-	int indice = filteringF ( (Geffe->L[0][15] - '0'), (Geffe->L[1][15] - '0'), (Geffe->L[2][15] - '0'));
+int shift ( LFSR * Geffe, int i)	{
+	char x0 = Geffe->L[0][15] - '0';
+	char x1 = Geffe->L[1][15] - '0';
+	char x2 = Geffe->L[2][15] - '0';
+
+	L0[i] = x0;
+	L1[i] = x1;
+	L2[i] = x2;
+
+	int indice = filteringF ( x0, x1, x2);
 	short tmp0 = (Geffe->L[0][15] - '0') ^ (Geffe->L[0][14] - '0') ^ (Geffe->L[0][11] - '0') ^ (Geffe->L[0][8] - '0'),
 		  tmp1 = (Geffe->L[1][15] - '0') ^ (Geffe->L[1][14] - '0') ^ (Geffe->L[1][8] - '0') ^ (Geffe->L[1][4] - '0'),
 		  tmp2 = (Geffe->L[2][15] - '0') ^ (Geffe->L[2][13] - '0') ^ (Geffe->L[2][12] - '0') ^ (Geffe->L[2][10] - '0');
@@ -56,12 +70,16 @@ int shift ( LFSR * Geffe)	{
 int * generate(LFSR* Geffe, int n) { //char* bitL0, char* bitL1, char* bitL2){
 	fprintf ( stdout, "Generation de la suite chiffrante ");
 	int * s = (int *) malloc ( n * sizeof (int));
+	L0 = (int *) malloc ( n * sizeof (int));
+	L1 = (int *) malloc ( n * sizeof (int));
+	L2 = (int *) malloc ( n * sizeof (int));
+
 	if ( !s)	{
 		fprintf ( stderr, "Erreur lors de l'allocation de la clé S\n");
 		exit(1);
 	}
 	for (int i = 0; i < n; i++)	{
-		s[i] = shift ( Geffe);
+		s[i] = shift ( Geffe, i);
 	}
 //	timer ();
 	return s;
@@ -99,6 +117,35 @@ void initialiserLFSR(const char* path,LFSR* gen){
 	
 }
 
+float prob_equivalence(int * s, int * r, int n){
+	int cpt = 0;
+	for (int i = 0; i < n; i++)
+	{
+		if(s[i] == r[i])
+		cpt++;
+	}
+	return (float)cpt/n;
+}
+
+void generate_bits(int nbits){
+	unsigned int n = pow(2,nbits);
+	unsigned int tmp = 0;
+
+	for (unsigned int c = 0; c < n; c++)
+	{
+		printf("%d = ", (int)c);
+		for (int i = sizeof(char)*nbits -1; i > -1; i--)
+		{
+			tmp = c & (1<<i);
+			printf("%c", (tmp == 0 ? '0': '1'));
+		}
+		printf("\n");
+	}
+	printf("\n\n\n**************************\n\n\n");
+}
+
+
+
 /**
  *	Usage  : ./Flow fichier n
  */
@@ -107,14 +154,22 @@ int main(int argc, char const *argv[])
 {
 	checkArgs ( argc);
 	//Ouvir le fichier et initialiser le LFSR
-	
-	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
+	int n = atoi ( argv[2]);
+	/*LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
 	initialiserLFSR(argv[1],Geffe);
 	
-	int * s = generate ( Geffe, atoi ( argv[2]));
-	printSequence ( s, atoi ( argv[2]));
-  	
+	int * s = generate ( Geffe, n);
+	printSequence ("S ",  s, n);
+	printSequence ("L0", L0, n);
+	printSequence ("L1", L1, n);
+	printSequence ("L2", L2, n);
+  	printf("\n\n");
+  	printf("%.2f\n", prob_equivalence(s, L0, n));
+  	printf("%.2f\n", prob_equivalence(s, L1, n));
+  	printf("%.2f\n", prob_equivalence(s, L2, n));
   	free(Geffe);
   	free ( s);
+	*/
+	generate_bits(n);
 	return 0;
 }
