@@ -15,6 +15,7 @@ typedef struct {
 	int pos;
 	float p;
 	int ** gen_suite;
+	int taille;
 }LFSR_I;
 
 //int * L0;
@@ -57,6 +58,7 @@ int filteringF(char x0, char x1, char x2){
 	* \return Bit de sortie de la fonction de filtrage aprés décalage
 */
 int shift ( LFSR * Geffe, int i)	{
+
 	char x0 = Geffe->L[0][15] - '0';
 	char x1 = Geffe->L[1][15] - '0';
 	char x2 = Geffe->L[2][15] - '0';
@@ -116,12 +118,11 @@ int * generate_li(char * li_initial, int n, int lfsr_i){
 
 */
 int * generate(LFSR* Geffe, int n) { //char* bitL0, char* bitL1, char* bitL2){
-	fprintf ( stdout, "Generation de la suite chiffrante ");
+	//fprintf ( stdout, "Generation de la suite chiffrante ");
 	int * s = (int *) malloc ( n * sizeof (int));
 	//L0 = (int *) malloc ( n * sizeof (int));
 	//L1 = (int *) malloc ( n * sizeof (int));
 	//L2 = (int *) malloc ( n * sizeof (int));
-
 	if ( !s)	{
 		fprintf ( stderr, "Erreur lors de l'allocation de la clé S\n");
 		exit(1);
@@ -229,7 +230,7 @@ void generate_bits(const char* path, int nbits){
 	* \param s : suite chiffante de N bits à tester
 	* \param n : la taille de la suite de bits
 */
-void verifier_cor(const char * path,int * s, int n, LFSR_I lfsr){
+void verifier_cor(const char * path,int * s, int n, LFSR_I * lfsr){
 	FILE* file = fopen(path,"r");
 	char tab_tmp [16];
 	if ( !file)	{
@@ -238,28 +239,32 @@ void verifier_cor(const char * path,int * s, int n, LFSR_I lfsr){
 	}
 	char * buffer = NULL;
 	size_t len = 1;
-	lfsr.gen_suite = NULL;
-	int taille = 0;
-	lfsr.gen_suite = malloc(sizeof(int*));
-	*lfsr.gen_suite = malloc(16*sizeof(int));
-	taille++;
+	lfsr->gen_suite = NULL;
+	int taille = 1;
+	lfsr->gen_suite = malloc(sizeof(int*));
+	lfsr->gen_suite[0] = malloc(16*sizeof(int *));
    	//printf("Attaque par correlation\n");
     while ((getline(&buffer, &len, file)) != -1) {
     	strncpy(tab_tmp, buffer,16);
-    	int * result = generate_li(tab_tmp, n, lfsr.pos);
+    	int * result = generate_li(tab_tmp, n, lfsr->pos);
 		float p = prob_equivalence(s, result, n);
-		if(p > 0.74 && p  < 0.85){
-		  lfsr.gen_suite =realloc(lfsr.gen_suite,taille);
-		  lfsr.gen_suite[taille] = malloc(16*sizeof(int));
+		float min = lfsr->p-0.1;
+		float max = lfsr->p+0.1;
+		//printf("%.2f -- %.2f\n", min, max); 
+		if(p > min  && p  < max){
 			for(int i = 15; i >= 0; i--){
-					lfsr.gen_suite[taille-1][i] = result[i]; 
+					lfsr->gen_suite[taille-1][15-i] = result[i]; 
 					//printf("%d", lfsr.gen_suite[taille-1][i]);
 			}
-			taille = sizeof(lfsr.gen_suite)/sizeof(int);
-			//printf("\n");
+			//printf("LFSR[%d] taille = %d\n", lfsr->pos, taille);
+			taille ++;
+		 	lfsr->gen_suite =realloc(lfsr->gen_suite,taille * sizeof(int*));
+		  	lfsr->gen_suite[taille-1] = malloc(16*sizeof(int));
 			
 		}
     }
+    lfsr-> taille = taille -1 ;
+
 	free(buffer);
 	fclose(file);
 }
@@ -271,22 +276,28 @@ void verifier_cor(const char * path,int * s, int n, LFSR_I lfsr){
 	et la sortie de la fonction F
 */
 LFSR_I * calculer_correlation_f(char * F){
-	LFSR_I  * lfsr;
 
-	lfsr = (LFSR_I *) malloc ( 3 * sizeof (LFSR_I));
+	LFSR_I  * lfsr = (LFSR_I *) malloc ( 3 * sizeof (LFSR_I));
 
-	printf("F = %s", F);
+	printf("F = %s ", F);
 	int F_int[8];
+	int cpt0 = 0;
+	int cpt1 = 0;
 	for(int i = 0;i< 8; i++){
+		if(F[i] -'0' == 0)
+			cpt0++;
+		else cpt1++;
 		F_int[i] = F[i] -'0';
 	}
+	if(cpt0 == cpt1)
+		printf("[Equilibré]\n");
 	for(int i= 0; i < 3; i++){
 		lfsr[i].pos = i;
 		float p = prob_equivalence(F_int, t_verite[i], 8);
 		lfsr[i].p = p ;
 		printf("L[%d] = %.2f\t", i,p);
 	}
-	printf("\n---------------------------------------------\n");
+	printf("\n");
 
 	return lfsr;
 }
@@ -308,44 +319,64 @@ void calculer_correlation_t_f(){
 }
 
 void decrypt(char * F, int * s, int n){
-	LFSR_I * tab_lfsr;
+	
+	LFSR_I * tab_lfsr = NULL;
 	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
+	
 	tab_lfsr =  calculer_correlation_f(F);
 	// Vérifier corrélation de chaque LFSR
+	
 	for (int i = 0; i < 3; ++i)
 	{
 		if(tab_lfsr[i].p == 0.5) {
-			printf("Attaque par recherche exhaustive n'est pas implementé\n LFSR [%d] = %.2f",i,tab_lfsr[i].p);
+			printf("Attaque par recherche exhaustive n'est pas implementé\n");
 			exit(1);
 		}
 	}
 	for (int i = 0; i < 3; ++i)
 	{
-		verifier_cor("gen_16bits", s, n, tab_lfsr[i]);
+		verifier_cor("gen_16bits", s, n, &tab_lfsr[i]);
 
 	}
-	int size_lfsr_0 = sizeof(tab_lfsr[0].gen_suite)/sizeof(int*);
-	int size_lfsr_1 = sizeof(tab_lfsr[1].gen_suite)/sizeof(int*);
-	int size_lfsr_2 = sizeof(tab_lfsr[2].gen_suite)/sizeof(int*);
-	for (int i = 0; i < size_lfsr_0; i++)
+
+	int row0 = tab_lfsr[0].taille;
+	int row1 = tab_lfsr[1].taille;
+	int row2 = tab_lfsr[2].taille;
+
+	printf("\nAttaque par corrélation...\n\n");
+	printf("Clés candidates\t");
+	printf("K0=%d, K1=%d, K2=%d\n", row0, row1, row2);
+	printf("Recherche exhaustive...\n");
+	int * gen;
+	for (int i = 0; i < row0; i++)
 	{
-		for (int j = 0; j < size_lfsr_1; j++)
+
+		for (int j = 0; j < row1; j++)
 		{
-			for (int k = 0; k < size_lfsr_2; k++)
+			for (int k = 0; k < row2; k++)
 			{	
+
 				Geffe = initialiserLSFR(F, tab_lfsr[0].gen_suite[i],tab_lfsr[1].gen_suite[j],
 								tab_lfsr[2].gen_suite[k]);
-				float p = prob_equivalence(s, generate(Geffe, n), n);
-				if(p == 1.00){
-						printf("Felicitation\n ");
-						printSequence("K0", tab_lfsr[0].gen_suite[i],n);
-						printSequence("K1", tab_lfsr[1].gen_suite[j],n);
-						printSequence("K2", tab_lfsr[2].gen_suite[k],n);
+				
+				gen = generate(Geffe, n);
+				float p = prob_equivalence(s, gen, n);
+				if(p == 1){
+						printSequence("K0", tab_lfsr[0].gen_suite[i],16);
+						printSequence("K1", tab_lfsr[1].gen_suite[j],16);
+						printSequence("K2", tab_lfsr[2].gen_suite[k],16);
+						printf("\nFelicitation\n ");
+						printSequence("S", s, n);
+						printf("\n");
 						exit(0);
 					}
+				free(gen);
 				}
+
 		}
 	}
+
+
 
 
 
@@ -374,21 +405,24 @@ int main(int argc, char const *argv[])
   	//printf("%.2f\n", prob_equivalence(s, L2, n));
   	free(Geffe);
   	free ( s);
-	
+	*/
 	//generate_bits(argv[1], n);
 	
-	*/
-	/* int s [100]= {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,
+	
+	/*int s [100]= {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,
 				0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0,1,0,
 				0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,0,1,1};
 	*/
+	int s [100] = {0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,1,1,0,0,0,0,0,0,1,0,1,0,1,0,1,1,0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,0,0,0,1,1,
+					1,1,1,0,1,0,0,0,1,1,0,0,1,0,1,0,1,1,1,0,0,1,1,0,1,0,0,1,0,0,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,0,0,0,};
 	//int s [28] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1};
-	int s [64] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,
-	 			1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0};
-	char * F = "10001110";
+	//int s [64] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,
+	//			1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0};
+	char * F = "00010111";
 	
 	//verifier_cor(argv[1], s, n);
 	//calculer_correlation_t_f();
 	decrypt(F, s, n);
+	
 	return 0;
 }

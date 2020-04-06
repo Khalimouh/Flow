@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -g3 -W -Wall 
+CFLAGS= -g3 -W -Wall -O3
 LDFLAGS= -lm
 EXEC= Flow
 SRC= $(wildcard src/*.c)
