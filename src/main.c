@@ -99,11 +99,11 @@ int * generate_li(char * li_initial, int n){
 	{
 		LI[i] = li_initial[15] - '0';
 		//L0
-		short tmp = (li_initial[15] - '0') ^ (li_initial[14] - '0') ^ (li_initial[11] - '0') ^ (li_initial[8] - '0');
+		//short tmp = (li_initial[15] - '0') ^ (li_initial[14] - '0') ^ (li_initial[11] - '0') ^ (li_initial[8] - '0');
 		// L1
 		//short tmp = (li_initial[15] - '0') ^ (li_initial[14] - '0') ^ (li_initial[8] - '0') ^ (li_initial[4] - '0');
 		// L2
-		//short tmp = (li_initial[15] - '0') ^ (li_initial[13] - '0') ^ (li_initial[12] - '0') ^ (li_initial[10] - '0');
+		short tmp = (li_initial[15] - '0') ^ (li_initial[13] - '0') ^ (li_initial[12] - '0') ^ (li_initial[10] - '0');
 		for (int i = 15; i > 0; i--)	{
 			li_initial[i] = li_initial[i-1];
 		}
@@ -223,7 +223,6 @@ void generate_bits(const char* path, int nbits){
 */
 void verifier_cor(const char * path, int * s, int n){
 	FILE* file = fopen(path,"r");
-	//FILE * filew = fopen("L1prob75", "w");
 	char tab_tmp [16];
 	if ( !file)	{
 		printf ("Erreur à l'ouverture du fichier\n");
@@ -231,18 +230,20 @@ void verifier_cor(const char * path, int * s, int n){
 	}
 	char * buffer = NULL;
 	size_t len = 1;
-   	printf("Attaque par correlation\n");
+   	//printf("Attaque par correlation\n");
     while ((getline(&buffer, &len, file)) != -1) {
     	strncpy(tab_tmp, buffer,16);
     	int * result = generate_li(tab_tmp, n);
 		float p = prob_equivalence(s, result, n);
-		if(p > 0.24 && p  < 0.33)
-			printSequence("",result,n);
+		if(p > 0.74 && p  < 0.85){
+			for(int i = 15; i >= 0; i--){
+
+				//keys_l [cpt][i] = result [i];
+			}
+		}
     }
-    printf("\n");
 	free(buffer);
 	fclose(file);
-	//fclose(filew);
 }
 
 
@@ -288,9 +289,9 @@ int main(int argc, char const *argv[])
 {
 	checkArgs ( argc);
 	//Ouvir le fichier et initialiser le LFSR
-	//int n = atoi ( argv[2]);
-	
-	/*LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
+	int n = atoi ( argv[2]);
+	/*
+	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
 	initialiserLFSR(argv[1],Geffe);
 	
 	int * s = generate ( Geffe, n);
@@ -308,12 +309,16 @@ int main(int argc, char const *argv[])
 	//generate_bits(argv[1], n);
 	
 	
-	int s [100]= {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,
+	/* int s [100]= {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,
 				0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0,1,0,
 				0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,0,1,1};
 	*/
 	//int s [28] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1};
-	//verifier_cor(argv[1], s, n);
-	calculer_correlation_t_f();
+	int s [64] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,
+		1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0};
+	
+	
+	verifier_cor(argv[1], s, n);
+	//calculer_correlation_t_f();
 	return 0;
 }
