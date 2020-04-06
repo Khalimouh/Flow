@@ -5,15 +5,24 @@
 #include <math.h>
 
 typedef struct {
-	char L[3][17];  //Registres
+	
+	char L[3][17];  //Registres	
 	char F[9];	    //Fonction
+
 }LFSR;
 
-int * L0;
-int * L1;
-int * L2;
+typedef struct {
+	int pos;
+	float p;
+	int ** gen_suite;
+}LFSR_I;
+
+//int * L0;
+//int * L1;
+//int * L2;
 
 int t_verite[3][8] = {{0,1,0,1,0,1,0,1}, {0,0,1,1,0,0,1,1},{0,0,0,0,1,1,1,1}};
+int xor_pos[3][4] = {{15,14,11,8}, {15,14,8,4}, {15,13,12,10}};	
 
 void checkArgs ( int argc)	{
 	if(argc != 3){ 
@@ -21,17 +30,6 @@ void checkArgs ( int argc)	{
 		exit(1);
 	}
 }
-/*
-void timer (void)	{
-	for (int i = 0; i < 3; i++)	{
-		fflush (stdout);
-		printf (".");
-		fflush ( stdout);
-		sleep ( 1);
-	}
-    printf ("\n");
-}
-*/
 
 /* 
 	Affichage d'une suite de N bits
@@ -63,9 +61,9 @@ int shift ( LFSR * Geffe, int i)	{
 	char x1 = Geffe->L[1][15] - '0';
 	char x2 = Geffe->L[2][15] - '0';
 
-	L0[i] = x0;
-	L1[i] = x1;
-	L2[i] = x2;
+	//L0[i] = x0;
+	//L1[i] = x1;
+	//L2[i] = x2;
 
 	int indice = filteringF ( x0, x1, x2);
 	short tmp0 = (Geffe->L[0][15] - '0') ^ (Geffe->L[0][14] - '0') ^ (Geffe->L[0][11] - '0') ^ (Geffe->L[0][8] - '0'),
@@ -90,30 +88,25 @@ int shift ( LFSR * Geffe, int i)	{
 	* \param n : nombre de bits à générer
 	* \return : suite de N bits de la sortie de LFSR
 */
-int * generate_li(char * li_initial, int n){
+int * generate_li(char * li_initial, int n, int lfsr_i){
 
-	
 	int * LI = (int *) malloc (n * sizeof(int));
 
 	for (int i = 0; i < n; i++)
 	{
 		LI[i] = li_initial[15] - '0';
 		//L0
-		//short tmp = (li_initial[15] - '0') ^ (li_initial[14] - '0') ^ (li_initial[11] - '0') ^ (li_initial[8] - '0');
-		// L1
-		//short tmp = (li_initial[15] - '0') ^ (li_initial[14] - '0') ^ (li_initial[8] - '0') ^ (li_initial[4] - '0');
-		// L2
-		short tmp = (li_initial[15] - '0') ^ (li_initial[13] - '0') ^ (li_initial[12] - '0') ^ (li_initial[10] - '0');
+		short xor = (li_initial[xor_pos[lfsr_i][0]] - '0') ^ (li_initial[xor_pos[lfsr_i][1]] - '0') 
+					^ (li_initial[xor_pos[lfsr_i][2]] - '0') ^ (li_initial[xor_pos[lfsr_i][3]] - '0');
 		for (int i = 15; i > 0; i--)	{
 			li_initial[i] = li_initial[i-1];
 		}
 		
-		li_initial[0] = tmp + '0';
+		li_initial[0] = xor + '0';
 		
 	}
 	return LI;
 }
-
 
 /*
 	* Génération de la suite chiffrante S pour N bits
@@ -125,9 +118,9 @@ int * generate_li(char * li_initial, int n){
 int * generate(LFSR* Geffe, int n) { //char* bitL0, char* bitL1, char* bitL2){
 	fprintf ( stdout, "Generation de la suite chiffrante ");
 	int * s = (int *) malloc ( n * sizeof (int));
-	L0 = (int *) malloc ( n * sizeof (int));
-	L1 = (int *) malloc ( n * sizeof (int));
-	L2 = (int *) malloc ( n * sizeof (int));
+	//L0 = (int *) malloc ( n * sizeof (int));
+	//L1 = (int *) malloc ( n * sizeof (int));
+	//L2 = (int *) malloc ( n * sizeof (int));
 
 	if ( !s)	{
 		fprintf ( stderr, "Erreur lors de l'allocation de la clé S\n");
@@ -136,7 +129,6 @@ int * generate(LFSR* Geffe, int n) { //char* bitL0, char* bitL1, char* bitL2){
 	for (int i = 0; i < n; i++)	{
 		s[i] = shift ( Geffe, i);
 	}
-//	timer ();
 	return s;
 }
 
@@ -146,7 +138,7 @@ int * generate(LFSR* Geffe, int n) { //char* bitL0, char* bitL1, char* bitL2){
 	* \param path chemin de fichier des entrées
 	* \param gen 3 LFSR pour initialiser
 */
-void initialiserLFSR(const char* path,LFSR* gen){
+void initialiserLFSR_file(const char* path,LFSR* gen){
 	FILE* file = fopen(path,"r");
 	if ( !file)	{
 		printf ("Erreur à l'ouverture du fichier\n");
@@ -174,7 +166,23 @@ void initialiserLFSR(const char* path,LFSR* gen){
 //    timer ();
 	free(buffer);
 	fclose(file);
-	
+}
+
+LFSR * initialiserLSFR(char * F, int * l0, int * l1, int * l2){
+	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
+	strncpy(Geffe->F, F, 8);
+	for( int i = 0; i < 16 ; i++){
+		Geffe->L[0][i] = l0[i] +'0';
+	}
+	for( int i = 0; i < 16 ; i++){
+		Geffe->L[1][i] = l1[i]+'0';
+	}
+	for( int i = 0; i < 16 ; i++){
+		Geffe->L[2][i] = l2[i] +'0';
+	}
+
+	return Geffe;
+
 }
 
 /*
@@ -221,7 +229,7 @@ void generate_bits(const char* path, int nbits){
 	* \param s : suite chiffante de N bits à tester
 	* \param n : la taille de la suite de bits
 */
-void verifier_cor(const char * path, int * s, int n){
+void verifier_cor(const char * path,int * s, int n, LFSR_I lfsr){
 	FILE* file = fopen(path,"r");
 	char tab_tmp [16];
 	if ( !file)	{
@@ -230,42 +238,42 @@ void verifier_cor(const char * path, int * s, int n){
 	}
 	char * buffer = NULL;
 	size_t len = 1;
-	int** tab = NULL;
+	lfsr.gen_suite = NULL;
 	int taille = 0;
-	tab = malloc(sizeof(int*));
-	*tab = malloc(16*sizeof(int));
+	lfsr.gen_suite = malloc(sizeof(int*));
+	*lfsr.gen_suite = malloc(16*sizeof(int));
 	taille++;
    	//printf("Attaque par correlation\n");
     while ((getline(&buffer, &len, file)) != -1) {
     	strncpy(tab_tmp, buffer,16);
-    	int * result = generate_li(tab_tmp, n);
+    	int * result = generate_li(tab_tmp, n, lfsr.pos);
 		float p = prob_equivalence(s, result, n);
 		if(p > 0.74 && p  < 0.85){
-		  tab =realloc(tab,taille);
-		  tab[taille] = malloc(16*sizeof(int));
+		  lfsr.gen_suite =realloc(lfsr.gen_suite,taille);
+		  lfsr.gen_suite[taille] = malloc(16*sizeof(int));
 			for(int i = 15; i >= 0; i--){
-					tab[taille-1][i] = result[i]; 
-					printf("%d", tab[taille-1][i]);
+					lfsr.gen_suite[taille-1][i] = result[i]; 
+					//printf("%d", lfsr.gen_suite[taille-1][i]);
 			}
-			taille = sizeof(tab)/sizeof(int);
-			printf("\n");
+			taille = sizeof(lfsr.gen_suite)/sizeof(int);
+			//printf("\n");
 			
 		}
     }
-   
-
-
-
 	free(buffer);
 	fclose(file);
 }
+
 
 
 /* 
 	* Calculer correlation entre chaque sortie de LFSR 
 	et la sortie de la fonction F
 */
-void calculer_correlation_f(char * F){
+LFSR_I * calculer_correlation_f(char * F){
+	LFSR_I  * lfsr;
+
+	lfsr = (LFSR_I *) malloc ( 3 * sizeof (LFSR_I));
 
 	printf("F = %s", F);
 	int F_int[8];
@@ -273,10 +281,14 @@ void calculer_correlation_f(char * F){
 		F_int[i] = F[i] -'0';
 	}
 	for(int i= 0; i < 3; i++){
+		lfsr[i].pos = i;
 		float p = prob_equivalence(F_int, t_verite[i], 8);
+		lfsr[i].p = p ;
 		printf("L[%d] = %.2f\t", i,p);
 	}
 	printf("\n---------------------------------------------\n");
+
+	return lfsr;
 }
 
 void calculer_correlation_t_f(){
@@ -295,6 +307,49 @@ void calculer_correlation_t_f(){
 	fclose(file);
 }
 
+void decrypt(char * F, int * s, int n){
+	LFSR_I * tab_lfsr;
+	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
+	tab_lfsr =  calculer_correlation_f(F);
+	// Vérifier corrélation de chaque LFSR
+	for (int i = 0; i < 3; ++i)
+	{
+		if(tab_lfsr[i].p == 0.5) {
+			printf("Attaque par recherche exhaustive n'est pas implementé\n LFSR [%d] = %.2f",i,tab_lfsr[i].p);
+			exit(1);
+		}
+	}
+	for (int i = 0; i < 3; ++i)
+	{
+		verifier_cor("gen_16bits", s, n, tab_lfsr[i]);
+
+	}
+	int size_lfsr_0 = sizeof(tab_lfsr[0].gen_suite)/sizeof(int*);
+	int size_lfsr_1 = sizeof(tab_lfsr[1].gen_suite)/sizeof(int*);
+	int size_lfsr_2 = sizeof(tab_lfsr[2].gen_suite)/sizeof(int*);
+	for (int i = 0; i < size_lfsr_0; i++)
+	{
+		for (int j = 0; j < size_lfsr_1; j++)
+		{
+			for (int k = 0; k < size_lfsr_2; k++)
+			{	
+				Geffe = initialiserLSFR(F, tab_lfsr[0].gen_suite[i],tab_lfsr[1].gen_suite[j],
+								tab_lfsr[2].gen_suite[k]);
+				float p = prob_equivalence(s, generate(Geffe, n), n);
+				if(p == 1.00){
+						printf("Felicitation\n ");
+						printSequence("K0", tab_lfsr[0].gen_suite[i],n);
+						printSequence("K1", tab_lfsr[1].gen_suite[j],n);
+						printSequence("K2", tab_lfsr[2].gen_suite[k],n);
+						exit(0);
+					}
+				}
+		}
+	}
+
+
+
+}
 /**
  *	Usage  : ./Flow fichier n
  */
@@ -306,33 +361,34 @@ int main(int argc, char const *argv[])
 	int n = atoi ( argv[2]);
 	/*
 	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
-	initialiserLFSR(argv[1],Geffe);
+	initialiserLFSR_file(argv[1],Geffe);
 	
 	int * s = generate ( Geffe, n);
 	printSequence ("S ",  s, n);
-	printSequence ("L0", L0, n);
-	printSequence ("L1", L1, n);
-	printSequence ("L2", L2, n);
+	//printSequence ("L0", L0, n);
+	//printSequence ("L1", L1, n);
+	//printSequence ("L2", L2, n);
   	printf("\n\n");
-  	printf("%.2f\n", prob_equivalence(s, L0, n));
-  	printf("%.2f\n", prob_equivalence(s, L1, n));
-  	printf("%.2f\n", prob_equivalence(s, L2, n));
+  	//printf("%.2f\n", prob_equivalence(s, L0, n));
+  	//printf("%.2f\n", prob_equivalence(s, L1, n));
+  	//printf("%.2f\n", prob_equivalence(s, L2, n));
   	free(Geffe);
   	free ( s);
 	
 	//generate_bits(argv[1], n);
 	
-	
+	*/
 	/* int s [100]= {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,
 				0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0,1,0,
 				0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,0,1,1};
 	*/
 	//int s [28] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1};
 	int s [64] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,
-		1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0};
+	 			1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0};
+	char * F = "10001110";
 	
-	
-	verifier_cor(argv[1], s, n);
+	//verifier_cor(argv[1], s, n);
 	//calculer_correlation_t_f();
+	decrypt(F, s, n);
 	return 0;
 }
