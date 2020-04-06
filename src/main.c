@@ -233,30 +233,27 @@ void verifier_cor(const char * path, int * s, int n){
 	int** tab = NULL;
 	int taille = 0;
 	tab = malloc(sizeof(int*));
-	tab[taille] = malloc(16*sizeof(int));
+	*tab = malloc(16*sizeof(int));
+	taille++;
    	//printf("Attaque par correlation\n");
     while ((getline(&buffer, &len, file)) != -1) {
     	strncpy(tab_tmp, buffer,16);
     	int * result = generate_li(tab_tmp, n);
 		float p = prob_equivalence(s, result, n);
 		if(p > 0.74 && p  < 0.85){
+		  tab =realloc(tab,taille);
+		  tab[taille] = malloc(16*sizeof(int));
 			for(int i = 15; i >= 0; i--){
-				tab[taille][i] = result[i]; 
-				
+					tab[taille-1][i] = result[i]; 
+					printf("%d", tab[taille-1][i]);
 			}
-			taille++;
-			realloc(tab,sizeof(tab)+1);
-			tab[sizeof(tab)+1] = malloc(16*sizeof(int));
+			taille = sizeof(tab)/sizeof(int);
+			printf("\n");
+			
 		}
     }
+   
 
-    for (int i = 0; i < taille; ++i)
-    {
-    	for (int j = 0; j < 16; ++j)
-    	{
-    		printf("%d\n", tab[i][j]);
-    	}
-    }
 
 
 	free(buffer);
