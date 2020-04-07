@@ -18,5 +18,6 @@ make
 ./Flow -c [fichier] [n] #Génére une suite chiffrante de N bits
 ./Flow -d [fichier] [n] # Attaque par correlation pour générer K
 ./Flow -g [fichier] [n] #Génére dans fichier toutes les combinaisons possbile sur n bits\n");
+./Flow -F #Affiche sur la sortie standart les correlations entre les sorties du LFSR
 ```
 Le fichier à utiliser pour une attaque par correlation est le fichier test_d et le fichier à utiliser pour une suite chiffrante est test_c
