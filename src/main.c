@@ -25,12 +25,6 @@ typedef struct {
 int t_verite[3][8] = {{0,1,0,1,0,1,0,1}, {0,0,1,1,0,0,1,1},{0,0,0,0,1,1,1,1}};
 int xor_pos[3][4] = {{15,14,11,8}, {15,14,8,4}, {15,13,12,10}};	
 
-void checkArgs ( int argc)	{
-	if(argc != 3){ 
-		fprintf(stderr, "Flow: opérande manquant\n");
-		exit(1);
-	}
-}
 
 /* 
 	Affichage d'une suite de N bits
@@ -57,7 +51,7 @@ int filteringF(char x0, char x1, char x2){
 	* \param i : Position de LFSR
 	* \return Bit de sortie de la fonction de filtrage aprés décalage
 */
-int shift ( LFSR * Geffe, int i)	{
+int shift ( LFSR * Geffe)	{
 
 	char x0 = Geffe->L[0][15] - '0';
 	char x1 = Geffe->L[1][15] - '0';
@@ -128,7 +122,7 @@ int * generate(LFSR* Geffe, int n) { //char* bitL0, char* bitL1, char* bitL2){
 		exit(1);
 	}
 	for (int i = 0; i < n; i++)	{
-		s[i] = shift ( Geffe, i);
+		s[i] = shift ( Geffe);
 	}
 	return s;
 }
@@ -235,7 +229,9 @@ void verifier_cor(const char * path,int * s, int n, LFSR_I * lfsr){
 	int * result = NULL;
 	//char tab_tmp [16];
 	if ( !file)	{
-		printf ("Erreur à l'ouverture du fichier\n");
+		printf ("Erreur à l'ouverture du fichier des combinaisons sur 16 bits\n");
+		fclose(file);
+		generate_bits(path, 16);
 		exit(1);
 	}
 	char * buffer = NULL;
@@ -371,7 +367,10 @@ void decrypt(char * F, int * s, int n){
 						printf("\nFelicitation\n ");
 						printSequence("S", s, n);
 						printf("\n");
-						exit(0);
+						free(gen);
+						free(Geffe);
+						free(tab_lfsr);
+						return;
 					}
 				free(gen);
 				free(Geffe);
@@ -385,77 +384,71 @@ void decrypt(char * F, int * s, int n){
 
 
 }
+
+
+void checkArgs ( int argc, char** argv)	{
+	if(argc == 4){
+		 int n = atoi(argv[3]);
+	if (strcmp(argv[1], "-c") == 0)
+	{
+		LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
+		initialiserLFSR_file(argv[2],Geffe);
+	
+		int * s = generate ( Geffe, n);
+		printSequence ("S ",  s, n);
+  		printf("\n\n");
+  		free(Geffe);
+  		free ( s);
+  		exit(0);
+	}
+	if (strcmp(argv[1], "-d") == 0)
+	{
+	 	FILE* entre = fopen(argv[2], "r");
+	 	if(entre){
+	 		char* buffer = NULL;
+	 		char F[8];
+	 		int* S = (int*) malloc(n* sizeof(int));
+	 		size_t size = 1;
+	 		getline(&buffer, &size, entre); 
+	 		strncpy(F,buffer, 8);
+	 		getline(&buffer, &size, entre); 
+	 		
+	 		for (int j = 0; j < n; j++)
+	 		{
+	 			S[j] = buffer[j] - '0';
+	 		}
+	 		decrypt(F, S, n);
+	 		free(buffer);
+	 		free(S);
+	 		fclose(entre);
+	 		exit(0);
+
+	 	}else{
+	 		fprintf(stderr, "-d: Erreur dans l'ouverture du fichier\n");
+	 		exit(1);
+	 	}
+	}
+	if (strcmp(argv[1], "-g") == 0)
+	{	
+		
+		generate_bits(argv[2], n);
+	}
+	else{
+		fprintf(stdout, "Liste des commandes Flow:\n\t -c [fichier] [n]: Génére une suite chiffrante de N bits \n\t -d [fichier] [n]: Attaque par correlation pour générer K \n\t -g [fichier] [n] : Génére dans fichier toutes les combinaisons possbile sur n bits\n");
+		exit(1);
+	}
+	
+}
+}
+
 /**
  *	Usage  : ./Flow fichier n
  */
 
-int main(int argc, char const *argv[])
+int main(int argc, char *argv[])
 {	
 
-	char opt = argv[1][1]; 
-	switch(opt){
-		case 'c' :
-		// TEST N
-
-		break;
-		case 'd' :
-		// F_S N
-			break;
-		case 'g' :	
-		// OUT N
-		break;
-		case 'h' :	break;
-		default : 	break;		
-
-
-	}
-
-
-
-
-
-
-
-
-	checkArgs ( argc);
-	//Ouvir le fichier et initialiser le LFSR
-	int n = atoi ( argv[2]);
-	/*
-	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
-	initialiserLFSR_file(argv[1],Geffe);
-	
-	int * s = generate ( Geffe, n);
-	printSequence ("S ",  s, n);
-	//printSequence ("L0", L0, n);
-	//printSequence ("L1", L1, n);
-	//printSequence ("L2", L2, n);
-  	printf("\n\n");
-  	//printf("%.2f\n", prob_equivalence(s, L0, n));
-  	//printf("%.2f\n", prob_equivalence(s, L1, n));
-  	//printf("%.2f\n", prob_equivalence(s, L2, n));
-  	free(Geffe);
-  	free ( s);
-	*/
-	//generate_bits(argv[1], n);
-	
-	
-	/*int s [100]= {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,
-				0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0,1,0,
-				0,0,1,1,1,1,0,0,0,0,1,1,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,1,1,1,0,1,1};
-	*/
-	int s [100] = {0,0,0,1,0,0,0,1,0,0,1,0,1,0,0,1,1,0,0,0,0,0,0,1,0,1,0,1,0,1,1,0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,0,0,0,1,1,
-					1,1,1,0,1,0,0,0,1,1,0,0,1,0,1,0,1,1,1,0,0,1,1,0,1,0,0,1,0,0,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,0,0,0,};
-	//int s [28] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,1,1};
-	//int s [64] = {0,0,1,0,1,0,1,0,1,0,0,0,1,1,1,1,1,0,0,0,1,0,0,0,0,0,
-	//			1,1,0,0,0,1,1,0,0,0,1,1,0,0,0,1,0,1,0,0,1,0,0,0,0,1,0,1,0,1,1,0,0,1,1,0,1,0};
-	char * F = "00010111";
-	
-	//verifier_cor(argv[1], s, n);
-	//calculer_correlation_t_f();
-	decrypt(F, s, n);
-	
+	checkArgs (argc, argv);
 	return 0;
-
-
-
 }
+
