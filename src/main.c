@@ -321,7 +321,7 @@ void calculer_correlation_t_f(){
 void decrypt(char * F, int * s, int n){
 	
 	LFSR_I * tab_lfsr = NULL;
-	LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
+	LFSR* Geffe = NULL;
 	
 	tab_lfsr =  calculer_correlation_f(F);
 	// Vérifier corrélation de chaque LFSR
@@ -356,8 +356,9 @@ void decrypt(char * F, int * s, int n){
 			for (int k = 0; k < row2; k++)
 			{	
 
-				Geffe = initialiserLSFR(F, tab_lfsr[0].gen_suite[i],tab_lfsr[1].gen_suite[j],
-								tab_lfsr[2].gen_suite[k]);
+				Geffe = initialiserLSFR(F, tab_lfsr[0].gen_suite[i],
+										tab_lfsr[1].gen_suite[j],
+										tab_lfsr[2].gen_suite[k]);
 				
 				gen = generate(Geffe, n);
 				float p = prob_equivalence(s, gen, n);
@@ -371,13 +372,14 @@ void decrypt(char * F, int * s, int n){
 						exit(0);
 					}
 				free(gen);
+				free(Geffe);
 				}
 
 		}
 	}
 
 
-
+	free(tab_lfsr);
 
 
 }
