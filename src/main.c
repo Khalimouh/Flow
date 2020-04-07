@@ -27,7 +27,7 @@ int xor_pos[3][4] = {{15,14,11,8}, {15,14,8,4}, {15,13,12,10}};
 
 void checkArgs ( int argc)	{
 	if(argc != 3){ 
-		fprintf(stderr, "Flow: opérande manquant\nUsage: Usage  : ./Flow fichier n\n");
+		fprintf(stderr, "Flow: opérande manquant\n");
 		exit(1);
 	}
 }
@@ -232,7 +232,8 @@ void generate_bits(const char* path, int nbits){
 */
 void verifier_cor(const char * path,int * s, int n, LFSR_I * lfsr){
 	FILE* file = fopen(path,"r");
-	char tab_tmp [16];
+	int * result = NULL;
+	//char tab_tmp [16];
 	if ( !file)	{
 		printf ("Erreur à l'ouverture du fichier\n");
 		exit(1);
@@ -245,8 +246,8 @@ void verifier_cor(const char * path,int * s, int n, LFSR_I * lfsr){
 	lfsr->gen_suite[0] = malloc(16*sizeof(int *));
    	//printf("Attaque par correlation\n");
     while ((getline(&buffer, &len, file)) != -1) {
-    	strncpy(tab_tmp, buffer,16);
-    	int * result = generate_li(tab_tmp, n, lfsr->pos);
+    	//strncpy(tab_tmp, buffer,16);
+    	result = generate_li(buffer, n, lfsr->pos);
 		float p = prob_equivalence(s, result, n);
 		float min = lfsr->p-0.1;
 		float max = lfsr->p+0.1;
@@ -262,6 +263,7 @@ void verifier_cor(const char * path,int * s, int n, LFSR_I * lfsr){
 		  	lfsr->gen_suite[taille-1] = malloc(16*sizeof(int));
 			
 		}
+		free(result);
     }
     lfsr-> taille = taille -1 ;
 
@@ -388,7 +390,33 @@ void decrypt(char * F, int * s, int n){
  */
 
 int main(int argc, char const *argv[])
-{
+{	
+
+	char opt = argv[1][1]; 
+	switch(opt){
+		case 'c' :
+		// TEST N
+
+		break;
+		case 'd' :
+		// F_S N
+			break;
+		case 'g' :	
+		// OUT N
+		break;
+		case 'h' :	break;
+		default : 	break;		
+
+
+	}
+
+
+
+
+
+
+
+
 	checkArgs ( argc);
 	//Ouvir le fichier et initialiser le LFSR
 	int n = atoi ( argv[2]);
@@ -427,4 +455,7 @@ int main(int argc, char const *argv[])
 	decrypt(F, s, n);
 	
 	return 0;
+
+
+
 }
