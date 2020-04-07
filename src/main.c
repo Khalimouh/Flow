@@ -202,6 +202,7 @@ float prob_equivalence(int * s, int * r, int n){
 */
 
 void generate_bits(const char* path, int nbits){
+	printf("Génération de toutes les combinaisons sur %d bits\n", nbits);
 	FILE  * file = fopen (path, "w");
 	__int64_t n = pow(2,nbits);
 	__int64_t tmp = 0;
@@ -230,9 +231,8 @@ void verifier_cor(const char * path,int * s, int n, LFSR_I * lfsr){
 	//char tab_tmp [16];
 	if ( !file)	{
 		printf ("Erreur à l'ouverture du fichier des combinaisons sur 16 bits\n");
-		fclose(file);
 		generate_bits(path, 16);
-		exit(1);
+		file = fopen(path,"r");
 	}
 	char * buffer = NULL;
 	size_t len = 1;
@@ -288,7 +288,7 @@ LFSR_I * calculer_correlation_f(char * F){
 		F_int[i] = F[i] -'0';
 	}
 	if(cpt0 == cpt1)
-		printf("[Equilibré]\n");
+		printf("[Equilibré]\n"); 
 	for(int i= 0; i < 3; i++){
 		lfsr[i].pos = i;
 		float p = prob_equivalence(F_int, t_verite[i], 8);
@@ -296,16 +296,16 @@ LFSR_I * calculer_correlation_f(char * F){
 		printf("L[%d] = %.2f\t", i,p);
 	}
 	printf("\n");
-
 	return lfsr;
 }
 
 void calculer_correlation_t_f(){
-	generate_bits("gen_8bits",8);
 	FILE * file = NULL;
 	file = fopen("gen_8bits", "r");
 	if (!file)	{
 		printf ("Erreur à l'ouverture de fichier gen_8bits\n");
+		generate_bits("gen_8bits",8);
+		file = fopen("gen_8bits", "r");
 	}
 	char * buffer = NULL;
 	size_t len = 1;
