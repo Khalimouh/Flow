@@ -276,8 +276,8 @@ void verifier_cor(const char * path,int * s, int n, LFSR_I * lfsr){
 LFSR_I * calculer_correlation_f(char * F){
 
 	LFSR_I  * lfsr = (LFSR_I *) malloc ( 3 * sizeof (LFSR_I));
-
-	printf("F = %s ", F);
+	printf("-----------------------------------------------------\n");
+	printf("F = %s  ", F);
 	int F_int[8];
 	int cpt0 = 0;
 	int cpt1 = 0;
@@ -288,14 +288,14 @@ LFSR_I * calculer_correlation_f(char * F){
 		F_int[i] = F[i] -'0';
 	}
 	if(cpt0 == cpt1)
-		printf("[Equilibré]\n"); 
+		printf("[Equilibré] "); 
 	for(int i= 0; i < 3; i++){
 		lfsr[i].pos = i;
 		float p = prob_equivalence(F_int, t_verite[i], 8);
 		lfsr[i].p = p ;
 		printf("L[%d] = %.2f\t", i,p);
 	}
-	printf("\n");
+	printf("\n-----------------------------------------------------\n");
 	return lfsr;
 }
 
@@ -303,7 +303,7 @@ void calculer_correlation_t_f(){
 	FILE * file = NULL;
 	file = fopen("gen_8bits", "r");
 	if (!file)	{
-		printf ("Erreur à l'ouverture de fichier gen_8bits\n");
+		printf ("Erreur à l'ouverture du fichier de combinaison sur 8 bits\n");
 		generate_bits("gen_8bits",8);
 		file = fopen("gen_8bits", "r");
 	}
@@ -388,7 +388,7 @@ void decrypt(char * F, int * s, int n){
 
 void checkArgs ( int argc, char** argv)	{
 	if(argc == 4){
-		 int n = atoi(argv[3]);
+		int n = atoi(argv[3]);
 	if (strcmp(argv[1], "-c") == 0)
 	{
 		LFSR* Geffe = (LFSR*) malloc(sizeof(LFSR));
@@ -401,8 +401,7 @@ void checkArgs ( int argc, char** argv)	{
   		free ( s);
   		exit(0);
 	}
-	if (strcmp(argv[1], "-d") == 0)
-	{
+	if (strcmp(argv[1], "-d") == 0){
 	 	FILE* entre = fopen(argv[2], "r");
 	 	if(entre){
 	 		char* buffer = NULL;
@@ -428,17 +427,18 @@ void checkArgs ( int argc, char** argv)	{
 	 		exit(1);
 	 	}
 	}
-	if (strcmp(argv[1], "-g") == 0)
-	{	
-		
-		generate_bits(argv[2], n);
+	if (strcmp(argv[1], "-g") == 0)	generate_bits(argv[2], n);
+	
+	}
+	if((strcmp(argv[1], "-F") == 0)){
+		if(argc == 2) calculer_correlation_t_f();
+		if(argc == 3) calculer_correlation_f(argv[2]);
+
 	}
 	else{
 		fprintf(stdout, "Liste des commandes Flow:\n\t -c [fichier] [n]: Génére une suite chiffrante de N bits \n\t -d [fichier] [n]: Attaque par correlation pour générer K \n\t -g [fichier] [n] : Génére dans fichier toutes les combinaisons possbile sur n bits\n");
 		exit(1);
 	}
-	
-}
 }
 
 /**
